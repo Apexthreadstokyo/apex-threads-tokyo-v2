@@ -1310,10 +1310,10 @@
       </div>
       <div class="footer-col">
         <h4>Legal</h4>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
-        <a href="#">特定商取引法</a>
-        <a href="#">Contact</a>
+        <a href="#" onclick="openLegalModal('privacy')">Privacy Policy</a>
+        <a href="#" onclick="openLegalModal('terms')">Terms of Service</a>
+        <a href="#" onclick="openLegalModal('tokushoho')">特定商取引法</a>
+        <a href="#" onclick="openLegalModal('contact')">Contact</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -1368,6 +1368,14 @@
         <span class="cart-total-price" id="cart-total">¥0</span>
       </div>
       <button class="checkout-btn" onclick="handleCheckout()" id="checkout-btn">Checkout</button>
+    </div>
+  </div>
+
+  <!-- Legal Modal -->
+  <div class="modal-overlay" id="legal-modal" style="display:none;">
+    <div class="modal" style="max-width:800px; padding:50px; overflow-y:auto; max-height:90vh;">
+      <button class="modal-close" onclick="closeLegalModal()" style="position:absolute;top:20px;right:20px;background:none;border:none;color:#fff;font-size:24px;cursor:pointer;">✕</button>
+      <div id="legal-content" style="color:#ccc; line-height:2;"></div>
     </div>
   </div>
 
@@ -1627,6 +1635,82 @@
         btn.disabled = false;
       }
     }
+
+    // ===== LEGAL MODALS =====
+    const legalContents = {
+      tokushoho: `
+        <h2 style="color:#fff;font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:30px;border-bottom:1px solid #333;padding-bottom:15px;">特定商取引法に基づく表記</h2>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;width:35%;vertical-align:top;">事業者名</td><td style="padding:15px 10px;">大﨑絢斗</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;vertical-align:top;">所在地</td><td style="padding:15px 10px;">東京都江東区豊洲3-6-5-1116</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;vertical-align:top;">電話番号</td><td style="padding:15px 10px;">070-8337-4625</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;vertical-align:top;">メールアドレス</td><td style="padding:15px 10px;">kento.osaki@icloud.com</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;vertical-align:top;">販売価格</td><td style="padding:15px 10px;">各商品ページに記載</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;vertical-align:top;">商品代金以外の必要料金</td><td style="padding:15px 10px;">送料：全国一律800円（税込10,000円以上のご購入で送料無料）</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;vertical-align:top;">お支払い方法</td><td style="padding:15px 10px;">クレジットカード（Visa / Mastercard / American Express / JCB）</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;vertical-align:top;">お支払い時期</td><td style="padding:15px 10px;">ご注文時にクレジットカードにて決済</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;vertical-align:top;">商品の引き渡し時期</td><td style="padding:15px 10px;">注文確定後、3〜5営業日以内に発送</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;vertical-align:top;">返品・交換について</td><td style="padding:15px 10px;">
+            ・不良品または誤配送の場合：商品到着後7日以内にご連絡ください。送料当店負担にて交換いたします。<br>
+            ・お客様都合の返品（サイズ違い・イメージ違い等）：商品到着後7日以内、未使用・タグ付きの状態に限り返品可。返送料はお客様負担となります。
+          </td></tr>
+        </table>
+      `,
+      privacy: `
+        <h2 style="color:#fff;font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:30px;border-bottom:1px solid #333;padding-bottom:15px;">プライバシーポリシー</h2>
+        <p style="margin-bottom:20px;">APEX_THREADS_TOKYO（以下「当店」）は、お客様の個人情報の保護を重要な責務と考え、以下の方針に基づき個人情報の適切な取り扱いと保護に努めます。</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">1. 収集する情報</h3>
+        <p>ご注文の際に、お名前、ご住所、電話番号、メールアドレス、お支払い情報をお預かりいたします。</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">2. 利用目的</h3>
+        <p>・商品の発送およびお届けに関するご連絡<br>・ご注文内容の確認<br>・お問い合わせへの対応<br>・当店サービスの改善</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">3. 第三者への提供</h3>
+        <p>法令に基づく場合を除き、お客様の同意なく個人情報を第三者に提供することはありません。ただし、配送業者および決済サービス（Stripe）への必要最低限の情報提供を行います。</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">4. 個人情報の管理</h3>
+        <p>個人情報の漏洩、紛失、改ざん等を防止するため、適切なセキュリティ対策を講じます。</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">5. お問い合わせ</h3>
+        <p>個人情報に関するお問い合わせは下記までご連絡ください。<br>メール：kento.osaki@icloud.com</p>
+      `,
+      terms: `
+        <h2 style="color:#fff;font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:30px;border-bottom:1px solid #333;padding-bottom:15px;">利用規約</h2>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">第1条（適用）</h3>
+        <p>本規約は、APEX_THREADS_TOKYO（以下「当店」）が運営するオンラインストアの利用に関する条件を定めるものです。</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">第2条（注文と契約）</h3>
+        <p>お客様が当店に対し商品の注文を行い、当店が注文を承諾した時点で売買契約が成立するものとします。</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">第3条（価格）</h3>
+        <p>商品の価格は、商品ページに表示された価格（税込）とします。当店は予告なく価格を変更する場合がありますが、既に成立した契約には影響しません。</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">第4条（配送）</h3>
+        <p>送料は全国一律800円（税込）です。税込10,000円以上のご注文で送料無料となります。注文確定後、3〜5営業日以内に発送いたします。</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">第5条（返品・交換）</h3>
+        <p>・不良品または誤配送の場合：商品到着後7日以内にご連絡ください。送料当店負担にて交換いたします。<br>・お客様都合の返品：商品到着後7日以内、未使用・タグ付きの状態に限り返品可。返送料はお客様負担となります。</p>
+        <h3 style="color:#fff;margin:25px 0 10px;font-size:16px;">第6条（知的財産権）</h3>
+        <p>当サイトに掲載されているすべてのコンテンツ（画像、テキスト、デザイン等）の著作権は当店に帰属します。無断転載・複製を禁じます。</p>
+      `,
+      contact: `
+        <h2 style="color:#fff;font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:30px;border-bottom:1px solid #333;padding-bottom:15px;">Contact</h2>
+        <p style="margin-bottom:30px;">ご質問・ご要望がございましたら、お気軽にお問い合わせください。</p>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;width:35%;">メール</td><td style="padding:15px 10px;"><a href="mailto:kento.osaki@icloud.com" style="color:var(--gold);">kento.osaki@icloud.com</a></td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;">電話</td><td style="padding:15px 10px;">070-8337-4625</td></tr>
+          <tr style="border-bottom:1px solid #222;"><td style="padding:15px 10px;color:#999;">営業時間</td><td style="padding:15px 10px;">平日 10:00〜18:00</td></tr>
+        </table>
+      `
+    };
+
+    function openLegalModal(type) {
+      event.preventDefault();
+      document.getElementById('legal-content').innerHTML = legalContents[type];
+      document.getElementById('legal-modal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLegalModal() {
+      document.getElementById('legal-modal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('legal-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeLegalModal();
+    });
 
     // ===== 決済結果の処理 =====
     const urlParams = new URLSearchParams(window.location.search);
