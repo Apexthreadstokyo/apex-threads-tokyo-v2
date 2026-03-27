@@ -3,10 +3,15 @@
 Apex Threads Tokyo - Luxury EC Site
 """
 
+import os
 from flask import Flask, jsonify, request, send_from_directory
-import json
+import stripe
 
 app = Flask(__name__, static_folder="static")
+
+# Stripe設定
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", ""
+)
 
 # 商品データ
 PRODUCTS = [
@@ -153,6 +158,61 @@ def get_product(product_id):
     if product:
         return jsonify(product)
     return jsonify({"error": "Product not found"}), 404
+
+
+@app.route("/api/checkout", methods=["POST"])
+def create_checkout():
+    """Stripe Checkout Sessionを作成してURLを返す"""
+    data = request.get_json()
+    items = data.get("items", [])
+
+    if not items:
+        return jsonify({"error": "カートが空です"}), 400
+
+    # Stripe用のline_itemsを組み立て
+    line_items = []
+    for item in items:
+        product = next((p for p in PRODUCTS if p["id"] == item["id"]), None)
+        if not product:
+            continue
+        line_items.append({
+            "price_data": {
+                "currency": "jpy",
+                "product_data": {
+                    "name": product["name"],
+                    "description": f"Size: {item.get('size', '-')} / Color: {item.get('color', '-')}",
+                },
+                "unit_amount": product["price"],  # JPYは小数点なし
+            },
+            "quantity": item.get("qty", 1),
+        })
+
+    if not line_items:
+        return jsonify({"error": "有効な商品がありません"}), 400
+
+    try:
+        # リクエストのホストからベースURLを生成
+        base_url = request.host_url.rstrip("/")
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=base_url + "/?status=success",
+            cancel_url=base_url + "/?status=cancel",
+        )
+        return jsonify({"url": session.url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/stripe-key")
+def stripe_key():
+    """公開可能キーをフロントに渡す"""
+    pk = os.environ.get(
+        "STRIPE_PUBLIC_KEY",
+        ""
+    )
+    return jsonify({"publicKey": pk})
 
 
 if __name__ == "__main__":

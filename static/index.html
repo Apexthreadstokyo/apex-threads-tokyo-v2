@@ -1367,7 +1367,7 @@
         <span class="cart-total-label">Subtotal</span>
         <span class="cart-total-price" id="cart-total">¥0</span>
       </div>
-      <button class="checkout-btn" onclick="showToast('チェックアウト機能は準備中です')">Checkout</button>
+      <button class="checkout-btn" onclick="handleCheckout()" id="checkout-btn">Checkout</button>
     </div>
   </div>
 
@@ -1586,6 +1586,59 @@
     }, { threshold: 0.1 });
 
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // ===== STRIPE CHECKOUT =====
+    async function handleCheckout() {
+      if (cart.length === 0) {
+        showToast('カートが空です');
+        return;
+      }
+
+      const btn = document.getElementById('checkout-btn');
+      btn.textContent = 'PROCESSING...';
+      btn.disabled = true;
+
+      try {
+        const items = cart.map(c => ({
+          id: c.id,
+          size: c.size,
+          color: c.color,
+          qty: c.qty
+        }));
+
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+        });
+
+        const data = await res.json();
+
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          showToast(data.error || 'エラーが発生しました');
+        }
+      } catch (err) {
+        showToast('通信エラーが発生しました');
+        console.error(err);
+      } finally {
+        btn.textContent = 'CHECKOUT';
+        btn.disabled = false;
+      }
+    }
+
+    // ===== 決済結果の処理 =====
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('status') === 'success') {
+      cart = [];
+      updateCart();
+      setTimeout(() => showToast('ご注文ありがとうございます！決済が完了しました。'), 500);
+      history.replaceState(null, '', '/');
+    } else if (urlParams.get('status') === 'cancel') {
+      setTimeout(() => showToast('決済がキャンセルされました'), 500);
+      history.replaceState(null, '', '/');
+    }
 
     // ===== INIT =====
     loadProducts();
