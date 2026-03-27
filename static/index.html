@@ -1310,10 +1310,10 @@
       </div>
       <div class="footer-col">
         <h4>Legal</h4>
-        <a href="#" onclick="openLegalModal('privacy')">Privacy Policy</a>
-        <a href="#" onclick="openLegalModal('terms')">Terms of Service</a>
-        <a href="#" onclick="openLegalModal('tokushoho')">特定商取引法</a>
-        <a href="#" onclick="openLegalModal('contact')">Contact</a>
+        <a href="#" onclick="openLegalModal(event,'privacy')">Privacy Policy</a>
+        <a href="#" onclick="openLegalModal(event,'terms')">Terms of Service</a>
+        <a href="#" onclick="openLegalModal(event,'tokushoho')">特定商取引法</a>
+        <a href="#" onclick="openLegalModal(event,'contact')">Contact</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -1696,8 +1696,8 @@
       `
     };
 
-    function openLegalModal(type) {
-      event.preventDefault();
+    function openLegalModal(e, type) {
+      e.preventDefault();
       document.getElementById('legal-content').innerHTML = legalContents[type];
       document.getElementById('legal-modal').style.display = 'flex';
       document.body.style.overflow = 'hidden';
