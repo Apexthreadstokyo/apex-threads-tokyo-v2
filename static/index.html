@@ -10,17 +10,23 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg-primary: #000000;
-      --bg-secondary: #0a0a0a;
-      --bg-card: #111111;
-      --bg-hover: #1a1a1a;
-      --text-primary: #ffffff;
-      --text-secondary: #999999;
-      --text-muted: #555555;
-      --gold: #c9a84c;
-      --gold-light: #e2c97e;
-      --border: #1f1f1f;
-      --danger: #ff4444;
+      --bg-primary: #020204;
+      --bg-secondary: #08080c;
+      --bg-card: #0c0c12;
+      --bg-hover: #14141c;
+      --text-primary: #f0f0f5;
+      --text-secondary: #8888a0;
+      --text-muted: #4a4a5e;
+      --gold: #c0c0d0;
+      --gold-light: #e8e8f5;
+      --border: #1a1a28;
+      --danger: #ff4466;
+      --silver: #c0c0d0;
+      --silver-light: #e8e8f5;
+      --chrome: linear-gradient(135deg, #888899 0%, #e0e0ef 40%, #ffffff 50%, #e0e0ef 60%, #888899 100%);
+      --glow: rgba(200, 200, 255, 0.15);
+      --glow-strong: rgba(200, 200, 255, 0.35);
+      --purple-glow: rgba(140, 100, 200, 0.12);
     }
 
     html { scroll-behavior: smooth; }
@@ -35,14 +41,15 @@
 
     /* ===== ANNOUNCEMENT BAR ===== */
     .announcement-bar {
-      background: var(--gold);
-      color: #000;
+      background: linear-gradient(90deg, #1a1a2e 0%, #2a2a40 50%, #1a1a2e 100%);
+      color: var(--silver-light);
       text-align: center;
       padding: 10px 20px;
       font-size: 12px;
       font-weight: 500;
       letter-spacing: 3px;
       text-transform: uppercase;
+      border-bottom: 1px solid rgba(200, 200, 255, 0.1);
     }
 
     /* ===== HEADER / NAV ===== */
@@ -74,7 +81,10 @@
     }
 
     .logo span {
-      color: var(--gold);
+      background: var(--chrome);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .nav-links {
@@ -101,7 +111,7 @@
       left: 0;
       width: 0;
       height: 1px;
-      background: var(--gold);
+      background: var(--silver-light);
       transition: width 0.3s ease;
     }
 
@@ -127,7 +137,7 @@
       position: absolute;
       top: -8px;
       right: -10px;
-      background: var(--gold);
+      background: var(--silver-light);
       color: #000;
       font-size: 9px;
       font-weight: 600;
@@ -137,6 +147,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 0 8px rgba(200, 200, 255, 0.4);
     }
 
     /* ===== HERO ===== */
@@ -148,7 +159,7 @@
       justify-content: center;
       text-align: center;
       overflow: hidden;
-      background: linear-gradient(180deg, #000 0%, #0a0a0a 30%, #111 60%, #0a0a0a 100%);
+      background: linear-gradient(180deg, #020204 0%, #08080e 30%, #0e0e18 60%, #08080e 100%);
     }
 
     .hero::before {
@@ -159,8 +170,22 @@
       right: 0;
       bottom: 0;
       background:
-        radial-gradient(ellipse at 20% 50%, rgba(201, 168, 76, 0.05) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 50%, rgba(201, 168, 76, 0.03) 0%, transparent 50%);
+        radial-gradient(ellipse at 50% 40%, rgba(180, 160, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 30% 70%, rgba(140, 100, 200, 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 60%, rgba(200, 200, 255, 0.04) 0%, transparent 50%);
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -55%);
+      width: 300px;
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(200, 180, 255, 0.06) 0%, transparent 70%);
+      filter: blur(40px);
+      pointer-events: none;
     }
 
     .hero-content {
@@ -174,9 +199,10 @@
       font-size: 12px;
       letter-spacing: 8px;
       text-transform: uppercase;
-      color: var(--gold);
+      color: var(--silver);
       margin-bottom: 30px;
       font-weight: 400;
+      text-shadow: 0 0 20px rgba(200, 200, 255, 0.3);
     }
 
     .hero-title {
@@ -190,7 +216,12 @@
 
     .hero-title em {
       font-style: italic;
-      color: var(--gold);
+      background: linear-gradient(135deg, #999 0%, #e8e8f5 30%, #fff 50%, #e8e8f5 70%, #999 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(0 0 30px rgba(200, 200, 255, 0.2));
     }
 
     .hero-desc {
@@ -206,19 +237,23 @@
     .hero-btn {
       display: inline-block;
       padding: 16px 60px;
-      border: 1px solid var(--gold);
-      color: var(--gold);
+      border: 1px solid rgba(200, 200, 255, 0.3);
+      color: var(--silver-light);
       text-decoration: none;
       font-size: 11px;
       letter-spacing: 4px;
       text-transform: uppercase;
       transition: all 0.4s ease;
       font-weight: 500;
+      backdrop-filter: blur(4px);
+      background: rgba(200, 200, 255, 0.03);
     }
 
     .hero-btn:hover {
-      background: var(--gold);
-      color: #000;
+      background: rgba(200, 200, 255, 0.1);
+      border-color: rgba(200, 200, 255, 0.6);
+      color: #fff;
+      box-shadow: 0 0 30px rgba(200, 200, 255, 0.15), inset 0 0 20px rgba(200, 200, 255, 0.05);
     }
 
     .scroll-indicator {
@@ -267,8 +302,9 @@
     }
 
     .marquee-item .dot {
-      color: var(--gold);
+      color: var(--silver);
       margin: 0 20px;
+      text-shadow: 0 0 8px rgba(200, 200, 255, 0.4);
     }
 
     @keyframes marquee {
@@ -291,10 +327,11 @@
     .section-label {
       font-size: 11px;
       letter-spacing: 6px;
-      color: var(--gold);
+      color: var(--silver);
       text-transform: uppercase;
       margin-bottom: 16px;
       font-weight: 400;
+      text-shadow: 0 0 12px rgba(200, 200, 255, 0.2);
     }
 
     .section-title {
@@ -336,9 +373,9 @@
 
     .filter-tab.active,
     .filter-tab:hover {
-      border-color: var(--gold);
-      color: var(--gold);
-      background: rgba(201, 168, 76, 0.05);
+      border-color: rgba(200, 200, 255, 0.4);
+      color: var(--silver-light);
+      background: rgba(200, 200, 255, 0.05);
     }
 
     .sort-select {
@@ -373,9 +410,9 @@
     }
 
     .product-card:hover {
-      border-color: rgba(201, 168, 76, 0.3);
+      border-color: rgba(200, 200, 255, 0.2);
       transform: translateY(-4px);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(200, 200, 255, 0.05);
     }
 
     .product-image {
@@ -421,9 +458,9 @@
       text-transform: uppercase;
     }
 
-    .badge-best { background: var(--gold); color: #000; }
-    .badge-new { background: #fff; color: #000; }
-    .badge-limited { background: var(--danger); color: #fff; }
+    .badge-best { background: linear-gradient(135deg, #aaa 0%, #e8e8f5 50%, #aaa 100%); color: #000; }
+    .badge-new { background: rgba(255,255,255,0.9); color: #000; }
+    .badge-limited { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); color: #fff; }
 
     .quick-add {
       position: absolute;
@@ -432,8 +469,8 @@
       right: 0;
       z-index: 3;
       padding: 14px;
-      background: rgba(201, 168, 76, 0.95);
-      color: #000;
+      background: rgba(220, 220, 240, 0.92);
+      color: #0a0a12;
       border: none;
       font-family: 'Inter', sans-serif;
       font-size: 11px;
@@ -443,6 +480,7 @@
       font-weight: 600;
       transform: translateY(100%);
       transition: transform 0.3s ease;
+      backdrop-filter: blur(8px);
     }
 
     .product-card:hover .quick-add {
@@ -469,9 +507,10 @@
     }
 
     .stars {
-      color: var(--gold);
+      color: var(--silver-light);
       font-size: 12px;
       letter-spacing: 2px;
+      text-shadow: 0 0 6px rgba(200, 200, 255, 0.3);
     }
 
     .review-count {
@@ -595,7 +634,7 @@
     }
 
     .lookbook-link {
-      color: var(--gold);
+      color: var(--silver-light);
       font-size: 11px;
       letter-spacing: 3px;
       text-transform: uppercase;
@@ -642,7 +681,7 @@
 
     .newsletter-btn {
       padding: 16px 32px;
-      background: var(--gold);
+      background: linear-gradient(135deg, #888 0%, #d0d0e0 50%, #888 100%);
       border: none;
       color: #000;
       font-family: 'Inter', sans-serif;
@@ -651,11 +690,12 @@
       text-transform: uppercase;
       cursor: pointer;
       font-weight: 600;
-      transition: background 0.3s;
+      transition: all 0.3s;
     }
 
     .newsletter-btn:hover {
-      background: var(--gold-light);
+      background: linear-gradient(135deg, #aaa 0%, #f0f0ff 50%, #aaa 100%);
+      box-shadow: 0 0 20px rgba(200, 200, 255, 0.2);
     }
 
     /* ===== FOOTER ===== */
@@ -705,7 +745,7 @@
       transition: color 0.3s;
     }
 
-    .footer-col a:hover { color: var(--gold); }
+    .footer-col a:hover { color: var(--silver-light); }
 
     .social-links {
       display: flex;
@@ -727,8 +767,9 @@
     }
 
     .social-link:hover {
-      border-color: var(--gold);
-      color: var(--gold);
+      border-color: rgba(200, 200, 255, 0.4);
+      color: var(--silver-light);
+      box-shadow: 0 0 12px rgba(200, 200, 255, 0.1);
     }
 
     .footer-bottom {
@@ -881,9 +922,9 @@
     }
 
     .option-btn.selected {
-      border-color: var(--gold);
-      color: var(--gold);
-      background: rgba(201, 168, 76, 0.1);
+      border-color: rgba(200, 200, 255, 0.5);
+      color: var(--silver-light);
+      background: rgba(200, 200, 255, 0.08);
     }
 
     .option-btn:hover {
@@ -893,9 +934,9 @@
     .add-to-cart-btn {
       width: 100%;
       padding: 18px;
-      background: var(--gold);
+      background: linear-gradient(135deg, #888 0%, #d0d0e0 50%, #888 100%);
       border: none;
-      color: #000;
+      color: #0a0a12;
       font-family: 'Inter', sans-serif;
       font-size: 12px;
       letter-spacing: 4px;
@@ -907,7 +948,8 @@
     }
 
     .add-to-cart-btn:hover {
-      background: var(--gold-light);
+      background: linear-gradient(135deg, #aaa 0%, #f0f0ff 50%, #aaa 100%);
+      box-shadow: 0 0 20px rgba(200, 200, 255, 0.2);
     }
 
     /* ===== CART DRAWER ===== */
@@ -1049,19 +1091,22 @@
     .checkout-btn {
       width: 100%;
       padding: 18px;
-      background: var(--gold);
+      background: linear-gradient(135deg, #888 0%, #d0d0e0 50%, #888 100%);
       border: none;
-      color: #000;
+      color: #0a0a12;
       font-family: 'Inter', sans-serif;
       font-size: 12px;
       letter-spacing: 4px;
       text-transform: uppercase;
       cursor: pointer;
       font-weight: 600;
-      transition: background 0.3s;
+      transition: all 0.3s;
     }
 
-    .checkout-btn:hover { background: var(--gold-light); }
+    .checkout-btn:hover {
+      background: linear-gradient(135deg, #aaa 0%, #f0f0ff 50%, #aaa 100%);
+      box-shadow: 0 0 20px rgba(200, 200, 255, 0.2);
+    }
 
     .cart-backdrop {
       position: fixed;
@@ -1079,7 +1124,7 @@
       bottom: 30px;
       right: 30px;
       background: var(--bg-card);
-      border: 1px solid var(--gold);
+      border: 1px solid rgba(200, 200, 255, 0.3);
       padding: 16px 28px;
       font-size: 13px;
       letter-spacing: 1px;
@@ -1087,6 +1132,7 @@
       transform: translateY(100px);
       opacity: 0;
       transition: all 0.4s ease;
+      box-shadow: 0 0 20px rgba(200, 200, 255, 0.1);
     }
 
     .toast.show {
@@ -1248,14 +1294,14 @@
     </div>
     <div class="lookbook-grid">
       <div class="lookbook-item fade-up">
-        <div class="lookbook-bg" style="background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 50%, #16213e 100%);"></div>
+        <div class="lookbook-bg" style="background: linear-gradient(135deg, #08080e 0%, #12122a 40%, #1a1a38 70%, #0e0e1c 100%);"></div>
         <div class="lookbook-overlay">
           <h3 class="lookbook-title">Urban Noir</h3>
           <a href="#collection" class="lookbook-link">Explore →</a>
         </div>
       </div>
       <div class="lookbook-item fade-up">
-        <div class="lookbook-bg" style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);"></div>
+        <div class="lookbook-bg" style="background: linear-gradient(135deg, #0a0a12 0%, #1c1c2e 40%, #24243a 70%, #0a0a12 100%);"></div>
         <div class="lookbook-overlay">
           <h3 class="lookbook-title">Midnight Edge</h3>
           <a href="#collection" class="lookbook-link">Explore →</a>
