@@ -126,6 +126,20 @@ PRODUCTS = [
         "rating": 5.0,
         "reviews": 34,
         "image_gradient": "linear-gradient(135deg, #0a0a14 0%, #18182e 50%, #222240 100%)"
+    },
+    {
+        "id": 9,
+        "name": "APEX LOGO HOODIE",
+        "price": 10800,
+        "original_price": 14800,
+        "category": "hoodies",
+        "badge": "NEW",
+        "description": "フロントにAPEXロゴを配したシグネチャーフーディ。裏起毛で暖かく、洗練されたストリートスタイル。",
+        "sizes": ["S", "M", "L", "XL"],
+        "colors": ["Black", "White"],
+        "rating": 4.8,
+        "reviews": 45,
+        "image_gradient": "linear-gradient(135deg, #0b0b18 0%, #151530 50%, #1e1e3c 100%)"
     }
 ]
 
