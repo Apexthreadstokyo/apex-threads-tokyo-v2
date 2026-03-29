@@ -149,6 +149,11 @@ def index():
     return send_from_directory("static", "index.html")
 
 
+@app.route("/tokushoho")
+def tokushoho():
+    return send_from_directory("static", "tokushoho.html")
+
+
 @app.route("/api/products")
 def get_products():
     category = request.args.get("category", "all")
