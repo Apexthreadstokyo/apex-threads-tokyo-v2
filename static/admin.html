@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APEX THREADS TOKYO - Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-input: #1a1a24;
+      --border: #2a2a38;
+      --text: #e8e8f0;
+      --text-secondary: #8888a0;
+      --text-muted: #555568;
+      --accent: #8b7cf6;
+      --accent-hover: #a594ff;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Login Screen */
+    .login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .login-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 48px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: 6px;
+      margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .login-input:focus { border-color: var(--accent); }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .login-btn:hover { background: var(--accent-hover); }
+
+    .login-error {
+      color: var(--danger);
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* Admin Layout */
+    .admin-container { display: none; }
+
+    .admin-header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .admin-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 4px;
+    }
+
+    .admin-logo span { color: var(--accent); }
+
+    .admin-user {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .admin-logout {
+      padding: 8px 20px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .admin-logout:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .admin-nav {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex;
+      gap: 0;
+    }
+
+    .admin-tab {
+      padding: 16px 24px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .admin-tab:hover { color: var(--text); }
+    .admin-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .admin-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    /* Table */
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+
+    .admin-table th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .admin-table td {
+      padding: 14px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: top;
+    }
+
+    .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .order-items {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-radius: 2px;
+    }
+
+    .status-paid { background: rgba(34,197,94,0.15); color: var(--success); }
+    .status-shipped { background: rgba(139,124,246,0.15); color: var(--accent); }
+    .status-pending { background: rgba(245,158,11,0.15); color: var(--warning); }
+
+    .ship-btn {
+      padding: 6px 16px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .ship-btn:hover { background: var(--accent-hover); }
+    .ship-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .shipped-label {
+      color: var(--success);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* Inventory */
+    .inventory-table input[type="number"] {
+      width: 80px;
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      text-align: center;
+      outline: none;
+      -moz-appearance: textfield;
+    }
+
+    .inventory-table input[type="number"]::-webkit-outer-spin-button,
+    .inventory-table input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .inventory-table input[type="number"]:focus {
+      border-color: var(--accent);
+    }
+
+    .save-stock-btn {
+      padding: 8px 20px;
+      background: var(--success);
+      border: none;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+
+    .save-stock-btn:hover { opacity: 0.85; }
+
+    .stock-low { color: var(--danger); font-weight: 600; }
+    .stock-out { color: var(--danger); font-weight: 700; }
+
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      padding: 14px 28px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      z-index: 9999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--danger); }
+
+    .refresh-btn {
+      padding: 8px 20px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 20px;
+    }
+
+    .refresh-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 13px;
+      letter-spacing: 2px;
+    }
+
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .admin-content { padding: 16px; }
+      .admin-table { font-size: 12px; }
+      .admin-table th, .admin-table td { padding: 10px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-box">
+      <div class="login-logo">APEX_THREADS_TOKYO</div>
+      <div class="login-subtitle">Admin Panel</div>
+      <input type="password" class="login-input" id="password-input" placeholder="Password" autocomplete="off">
+      <button class="login-btn" id="login-btn" onclick="doLogin()">Login</button>
+      <div class="login-error" id="login-error">Invalid password</div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div class="admin-container" id="admin-container">
+    <div class="admin-header">
+      <div class="admin-logo">APEX_THREADS_TOKYO <span>ADMIN</span></div>
+      <div class="admin-user">
+        <button class="admin-logout" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="admin-nav">
+      <button class="admin-tab active" data-tab="orders" onclick="switchTab('orders', this)">Orders</button>
+      <button class="admin-tab" data-tab="inventory" onclick="switchTab('inventory', this)">Inventory</button>
+    </div>
+
+    <div class="admin-content">
+      <!-- Orders Tab -->
+      <div class="tab-panel active" id="tab-orders">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div class="section-title">Recent Orders</div>
+          <button class="refresh-btn" onclick="loadOrders()">Refresh</button>
+        </div>
+        <div id="orders-stats" class="stats-row"></div>
+        <div id="orders-table-wrap">
+          <div class="loading">Loading orders...</div>
+        </div>
+      </div>
+
+      <!-- Inventory Tab -->
+      <div class="tab-panel" id="tab-inventory">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div class="section-title">Inventory Management</div>
+          <button class="refresh-btn" onclick="loadInventory()">Refresh</button>
+        </div>
+        <div id="inventory-table-wrap">
+          <div class="loading">Loading inventory...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  let adminPassword = '';
+
+  // Enter key on password input
+  document.getElementById('password-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  function doLogin() {
+    const pw = document.getElementById('password-input').value;
+    adminPassword = pw;
+    // Test auth by calling inventory endpoint
+    fetch('/api/admin/inventory', {
+      headers: { 'X-Admin-Password': pw }
+    }).then(r => {
+      if (r.ok) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('admin-container').style.display = 'block';
+        loadOrders();
+        loadInventory();
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+        adminPassword = '';
+      }
+    }).catch(() => {
+      document.getElementById('login-error').style.display = 'block';
+      adminPassword = '';
+    });
+  }
+
+  function doLogout() {
+    adminPassword = '';
+    document.getElementById('admin-container').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('password-input').value = '';
+    document.getElementById('login-error').style.display = 'none';
+  }
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+  }
+
+  function adminFetch(url, options = {}) {
+    options.headers = options.headers || {};
+    options.headers['X-Admin-Password'] = adminPassword;
+    return fetch(url, options);
+  }
+
+  // ===== ORDERS =====
+  async function loadOrders() {
+    const wrap = document.getElementById('orders-table-wrap');
+    wrap.innerHTML = '<div class="loading">Loading orders...</div>';
+    try {
+      const res = await adminFetch('/api/admin/orders');
+      if (!res.ok) throw new Error('Failed to load orders');
+      const orders = await res.json();
+      renderOrderStats(orders);
+      renderOrders(orders);
+    } catch (e) {
+      wrap.innerHTML = '<div class="loading">Failed to load orders. Make sure Stripe keys are configured.</div>';
+    }
+  }
+
+  function renderOrderStats(orders) {
+    const total = orders.length;
+    const revenue = orders.reduce((s, o) => s + (o.amount_total || 0), 0);
+    const shipped = orders.filter(o => o.shipped).length;
+    const pending = total - shipped;
+
+    document.getElementById('orders-stats').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value">${total}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Revenue</div>
+        <div class="stat-value">&yen;${revenue.toLocaleString()}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Shipped</div>
+        <div class="stat-value">${shipped}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">${pending}</div>
+      </div>
+    `;
+  }
+
+  function renderOrders(orders) {
+    const wrap = document.getElementById('orders-table-wrap');
+    if (orders.length === 0) {
+      wrap.innerHTML = '<div class="loading">No orders found.</div>';
+      return;
+    }
+    let html = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Shipping</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    for (const o of orders) {
+      const date = new Date(o.created * 1000);
+      const dateStr = date.toLocaleDateString('ja-JP') + ' ' + date.toLocaleTimeString('ja-JP', {hour:'2-digit', minute:'2-digit'});
+      const itemsHtml = o.items.map(i => `${i.name} x${i.quantity}`).join('<br>');
+      const statusClass = o.shipped ? 'status-shipped' : 'status-paid';
+      const statusText = o.shipped ? 'SHIPPED' : 'PAID';
+
+      html += `
+        <tr>
+          <td style="white-space:nowrap;">${dateStr}</td>
+          <td>
+            <div style="font-weight:500;">${escapeHtml(o.customer_name)}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(o.customer_email)}</div>
+          </td>
+          <td><div class="order-items">${itemsHtml}</div></td>
+          <td style="font-weight:600;">&yen;${(o.amount_total || 0).toLocaleString()}</td>
+          <td style="font-size:12px;color:var(--text-secondary);max-width:180px;">${escapeHtml(o.shipping_address)}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td>
+            ${o.shipped
+              ? '<span class="shipped-label">Shipped</span>'
+              : `<button class="ship-btn" onclick="markShipped('${escapeHtml(o.payment_intent)}', this)">Ship</button>`
+            }
+          </td>
+        </tr>
+      `;
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  }
+
+  async function markShipped(pi, btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const res = await adminFetch(`/api/admin/orders/${pi}/ship`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res.ok) {
+        showToast('Order marked as shipped', 'success');
+        loadOrders();
+      } else {
+        showToast('Failed to mark as shipped', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Ship';
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Ship';
+    }
+  }
+
+  // ===== INVENTORY =====
+  async function loadInventory() {
+    const wrap = document.getElementById('inventory-table-wrap');
+    wrap.innerHTML = '<div class="loading">Loading inventory...</div>';
+    try {
+      const res = await adminFetch('/api/admin/inventory');
+      if (!res.ok) throw new Error('Failed to load');
+      const items = await res.json();
+      renderInventory(items);
+    } catch (e) {
+      wrap.innerHTML = '<div class="loading">Failed to load inventory.</div>';
+    }
+  }
+
+  function renderInventory(items) {
+    const wrap = document.getElementById('inventory-table-wrap');
+    let html = `
+      <table class="admin-table inventory-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    for (const item of items) {
+      const stockClass = item.stock <= 0 ? 'stock-out' : item.stock <= 3 ? 'stock-low' : '';
+      html += `
+        <tr>
+          <td>${item.id}</td>
+          <td style="font-weight:500;">${escapeHtml(item.name)}</td>
+          <td>&yen;${item.price.toLocaleString()}</td>
+          <td>
+            <input type="number" id="stock-${item.id}" value="${item.stock}" min="0" class="${stockClass}">
+          </td>
+          <td>
+            <button class="save-stock-btn" onclick="saveStock(${item.id})">Save</button>
+          </td>
+        </tr>
+      `;
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+  }
+
+  async function saveStock(productId) {
+    const input = document.getElementById('stock-' + productId);
+    const newStock = parseInt(input.value, 10);
+    if (isNaN(newStock) || newStock < 0) {
+      showToast('Invalid stock value', 'error');
+      return;
+    }
+    try {
+      const res = await adminFetch(`/api/admin/inventory/${productId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock: newStock })
+      });
+      if (res.ok) {
+        showToast(`Stock updated to ${newStock}`, 'success');
+        loadInventory();
+      } else {
+        const data = await res.json();
+        showToast(data.error || 'Failed to update', 'error');
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message, 'error');
+    }
+  }
+
+  // ===== UTILS =====
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast ' + (type || '') + ' show';
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+</script>
+
+</body>
+</html>

@@ -4,10 +4,12 @@ Apex Threads Tokyo - Luxury EC Site
 """
 
 import os
+import json
 import smtplib
+from functools import wraps
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, Response
 import stripe
 
 app = Flask(__name__, static_folder="static")
@@ -23,6 +25,12 @@ SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASS = os.environ.get("SMTP_PASS", "")
 NOTIFY_EMAIL = os.environ.get("NOTIFY_EMAIL", "apexthreadstokyo@outlook.jp")
 
+# 管理画面パスワード
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "apex2026")
+
+# 出荷ステータス管理（インメモリ）: { payment_intent_id: True }
+SHIPPED_ORDERS = {}
+
 # 商品データ
 PRODUCTS = [
     {
@@ -37,7 +45,8 @@ PRODUCTS = [
         "colors": ["Black", "Graphite", "Midnight"],
         "rating": 4.8,
         "reviews": 203,
-        "image_gradient": "linear-gradient(135deg, #08080e 0%, #12122a 50%, #1a1a38 100%)"
+        "image_gradient": "linear-gradient(135deg, #08080e 0%, #12122a 50%, #1a1a38 100%)",
+        "stock": 10
     },
     {
         "id": 2,
@@ -51,7 +60,8 @@ PRODUCTS = [
         "colors": ["Black", "Onyx"],
         "rating": 4.9,
         "reviews": 89,
-        "image_gradient": "linear-gradient(135deg, #0a0a12 0%, #1c1c2e 50%, #24243a 100%)"
+        "image_gradient": "linear-gradient(135deg, #0a0a12 0%, #1c1c2e 50%, #24243a 100%)",
+        "stock": 10
     },
     {
         "id": 3,
@@ -65,7 +75,8 @@ PRODUCTS = [
         "colors": ["Black", "Charcoal"],
         "rating": 4.7,
         "reviews": 156,
-        "image_gradient": "linear-gradient(135deg, #0d0d14 0%, #18182a 50%, #222238 100%)"
+        "image_gradient": "linear-gradient(135deg, #0d0d14 0%, #18182a 50%, #222238 100%)",
+        "stock": 10
     },
     {
         "id": 4,
@@ -79,7 +90,8 @@ PRODUCTS = [
         "colors": ["Black"],
         "rating": 4.9,
         "reviews": 42,
-        "image_gradient": "linear-gradient(135deg, #06060c 0%, #14142a 50%, #1e1e34 100%)"
+        "image_gradient": "linear-gradient(135deg, #06060c 0%, #14142a 50%, #1e1e34 100%)",
+        "stock": 10
     },
     {
         "id": 5,
@@ -93,7 +105,8 @@ PRODUCTS = [
         "colors": ["Black", "Slate"],
         "rating": 4.8,
         "reviews": 98,
-        "image_gradient": "linear-gradient(135deg, #0c0c16 0%, #1a1a30 50%, #20203a 100%)"
+        "image_gradient": "linear-gradient(135deg, #0c0c16 0%, #1a1a30 50%, #20203a 100%)",
+        "stock": 10
     },
     {
         "id": 6,
@@ -107,7 +120,8 @@ PRODUCTS = [
         "colors": ["Black", "White", "Grey"],
         "rating": 4.7,
         "reviews": 312,
-        "image_gradient": "linear-gradient(135deg, #0e0e18 0%, #16162a 50%, #1c1c32 100%)"
+        "image_gradient": "linear-gradient(135deg, #0e0e18 0%, #16162a 50%, #1c1c32 100%)",
+        "stock": 10
     },
     {
         "id": 7,
@@ -121,7 +135,8 @@ PRODUCTS = [
         "colors": ["Black", "Dark Grey"],
         "rating": 4.6,
         "reviews": 67,
-        "image_gradient": "linear-gradient(135deg, #080810 0%, #101024 50%, #1a1a30 100%)"
+        "image_gradient": "linear-gradient(135deg, #080810 0%, #101024 50%, #1a1a30 100%)",
+        "stock": 10
     },
     {
         "id": 8,
@@ -135,7 +150,8 @@ PRODUCTS = [
         "colors": ["Black", "Midnight"],
         "rating": 5.0,
         "reviews": 34,
-        "image_gradient": "linear-gradient(135deg, #0a0a14 0%, #18182e 50%, #222240 100%)"
+        "image_gradient": "linear-gradient(135deg, #0a0a14 0%, #18182e 50%, #222240 100%)",
+        "stock": 10
     },
     {
         "id": 9,
@@ -149,7 +165,8 @@ PRODUCTS = [
         "colors": ["Black", "White"],
         "rating": 4.8,
         "reviews": 45,
-        "image_gradient": "linear-gradient(135deg, #0b0b18 0%, #151530 50%, #1e1e3c 100%)"
+        "image_gradient": "linear-gradient(135deg, #0b0b18 0%, #151530 50%, #1e1e3c 100%)",
+        "stock": 10
     }
 ]
 
@@ -463,10 +480,193 @@ def stripe_webhook():
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         print(f"[ORDER] Payment received: {session.get('payment_intent')}")
+        # 在庫を減らす
+        try:
+            line_items_data = stripe.checkout.Session.list_line_items(session["id"])
+            for item in line_items_data.get("data", []):
+                item_name = item.get("description", "")
+                qty = item.get("quantity", 1)
+                # 商品名でマッチング（descriptionには "商品名" が入る）
+                for product in PRODUCTS:
+                    if product["name"] in item_name or item_name.startswith(product["name"]):
+                        product["stock"] = max(0, product["stock"] - qty)
+                        print(f"[STOCK] {product['name']}: stock decreased by {qty}, now {product['stock']}")
+                        break
+        except Exception as e:
+            print(f"[ERROR] Failed to update stock: {e}")
         send_order_notification(session)
         send_customer_confirmation(session)
 
     return jsonify({"status": "ok"}), 200
+
+
+# ===== 管理画面認証 =====
+def check_admin_auth():
+    """リクエストヘッダーからAdmin認証を確認"""
+    auth_header = request.headers.get("X-Admin-Password", "")
+    return auth_header == ADMIN_PASSWORD
+
+
+def require_admin(f):
+    """管理画面APIの認証デコレータ"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not check_admin_auth():
+            return jsonify({"error": "Unauthorized"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route("/admin")
+def admin_page():
+    return send_from_directory("static", "admin.html")
+
+
+@app.route("/api/admin/orders")
+@require_admin
+def admin_orders():
+    """Stripeから最近の注文を取得"""
+    try:
+        sessions = stripe.checkout.Session.list(
+            limit=30,
+            expand=["data.line_items", "data.customer_details"],
+        )
+        orders = []
+        for s in sessions.get("data", []):
+            if s.get("payment_status") != "paid":
+                continue
+            pi = s.get("payment_intent", "")
+            # line_itemsを取得
+            try:
+                line_items = stripe.checkout.Session.list_line_items(s["id"])
+                items = [
+                    {
+                        "name": li.get("description", ""),
+                        "quantity": li.get("quantity", 1),
+                        "amount": li.get("amount_total", 0),
+                    }
+                    for li in line_items.get("data", [])
+                ]
+            except Exception:
+                items = []
+
+            shipping = s.get("shipping_details") or {}
+            address = shipping.get("address") or {}
+            shipping_addr = ""
+            if address:
+                shipping_addr = (
+                    f"\u3012{address.get('postal_code', '')} "
+                    f"{address.get('state', '')}{address.get('city', '')}"
+                    f"{address.get('line1', '')} {address.get('line2', '') or ''}"
+                )
+
+            customer = s.get("customer_details") or {}
+            orders.append({
+                "payment_intent": pi,
+                "created": s.get("created", 0),
+                "customer_name": customer.get("name", ""),
+                "customer_email": customer.get("email", ""),
+                "items": items,
+                "amount_total": s.get("amount_total", 0),
+                "shipping_address": shipping_addr,
+                "status": s.get("payment_status", ""),
+                "shipped": SHIPPED_ORDERS.get(pi, False),
+            })
+        return jsonify(orders)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/admin/inventory")
+@require_admin
+def admin_inventory():
+    """全商品の在庫情報を返す"""
+    inventory = [
+        {"id": p["id"], "name": p["name"], "price": p["price"], "stock": p["stock"]}
+        for p in PRODUCTS
+    ]
+    return jsonify(inventory)
+
+
+@app.route("/api/admin/inventory/<int:product_id>", methods=["POST"])
+@require_admin
+def admin_update_inventory(product_id):
+    """商品の在庫数を更新"""
+    data = request.get_json()
+    new_stock = data.get("stock")
+    if new_stock is None:
+        return jsonify({"error": "stock is required"}), 400
+    try:
+        new_stock = int(new_stock)
+    except (ValueError, TypeError):
+        return jsonify({"error": "stock must be an integer"}), 400
+    if new_stock < 0:
+        return jsonify({"error": "stock must be >= 0"}), 400
+
+    product = next((p for p in PRODUCTS if p["id"] == product_id), None)
+    if not product:
+        return jsonify({"error": "Product not found"}), 404
+
+    product["stock"] = new_stock
+    return jsonify({"id": product["id"], "name": product["name"], "stock": product["stock"]})
+
+
+@app.route("/api/admin/orders/<payment_intent>/ship", methods=["POST"])
+@require_admin
+def admin_ship_order(payment_intent):
+    """注文を出荷済みにする"""
+    SHIPPED_ORDERS[payment_intent] = True
+
+    # オプション: 出荷通知メールを送信
+    if SMTP_USER and SMTP_PASS:
+        try:
+            # payment_intentからセッション情報を取得
+            sessions = stripe.checkout.Session.list(
+                payment_intent=payment_intent, limit=1
+            )
+            if sessions.get("data"):
+                s = sessions["data"][0]
+                customer = s.get("customer_details") or {}
+                customer_email = customer.get("email")
+                customer_name = customer.get("name", "")
+                if customer_email:
+                    send_shipping_notification(customer_email, customer_name)
+        except Exception as e:
+            print(f"[ERROR] Failed to send shipping notification: {e}")
+
+    return jsonify({"payment_intent": payment_intent, "shipped": True})
+
+
+def send_shipping_notification(email, name):
+    """出荷通知メールをお客様に送信"""
+    body = f"""{name} 様
+
+いつもAPEX THREADS TOKYOをご利用いただきありがとうございます。
+
+ご注文の商品を発送いたしました。
+お届けまで1〜3日程度お待ちください。
+
+ご不明な点がございましたら、お気軽にお問い合わせください。
+
+メール: apexthreadstokyo@outlook.jp
+電話: 070-8337-4625
+
+APEX THREADS TOKYO
+"""
+    msg = MIMEMultipart()
+    msg["From"] = SMTP_USER
+    msg["To"] = email
+    msg["Subject"] = f"【APEX THREADS TOKYO】商品を発送しました"
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.send_message(msg)
+        print(f"[OK] Shipping notification sent to {email}")
+    except Exception as e:
+        print(f"[ERROR] Failed to send shipping notification email: {e}")
 
 
 if __name__ == "__main__":

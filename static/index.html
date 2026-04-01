@@ -461,6 +461,19 @@
     .badge-best { background: linear-gradient(135deg, #aaa 0%, #e8e8f5 50%, #aaa 100%); color: #000; }
     .badge-new { background: rgba(255,255,255,0.9); color: #000; }
     .badge-limited { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); color: #fff; }
+    .badge-soldout { background: rgba(255, 68, 102, 0.9); color: #fff; }
+
+    .product-card.sold-out { opacity: 0.6; }
+    .product-card.sold-out .quick-add { display: none; }
+
+    .modal-stock {
+      font-size: 13px;
+      color: var(--danger);
+      font-weight: 500;
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+    .modal-stock.in-stock { color: var(--text-secondary); }
 
     .quick-add {
       position: absolute;
@@ -1381,6 +1394,7 @@
         <h2 class="modal-name" id="modal-name"></h2>
         <div class="modal-price-row" id="modal-price"></div>
         <p class="modal-desc" id="modal-desc"></p>
+        <div class="modal-stock" id="modal-stock"></div>
         <div class="option-group" id="modal-sizes">
           <div class="option-label">Size</div>
           <div class="option-buttons" id="size-buttons"></div>
@@ -1445,18 +1459,19 @@
         const discount = p.original_price
           ? Math.round((1 - p.price / p.original_price) * 100)
           : 0;
-        const badgeClass = p.badge === 'BEST SELLER' ? 'badge-best'
-          : p.badge === 'NEW' ? 'badge-new'
-          : p.badge === 'LIMITED' ? 'badge-limited' : '';
+        const isSoldOut = p.stock !== undefined && p.stock <= 0;
+        const badgeHtml = isSoldOut
+          ? '<span class="product-badge badge-soldout">SOLD OUT</span>'
+          : (p.badge ? `<span class="product-badge ${p.badge === 'BEST SELLER' ? 'badge-best' : p.badge === 'NEW' ? 'badge-new' : p.badge === 'LIMITED' ? 'badge-limited' : ''}">${p.badge}</span>` : '');
         const stars = '★'.repeat(Math.floor(p.rating)) + (p.rating % 1 >= 0.5 ? '½' : '');
 
         return `
-          <div class="product-card fade-up visible" onclick="openModal(${p.id})">
+          <div class="product-card fade-up visible ${isSoldOut ? 'sold-out' : ''}" onclick="openModal(${p.id})">
             <div class="product-image">
               <div class="product-image-bg" style="background: ${p.image_gradient}"></div>
               <span class="product-image-text">${p.name.split(' ')[0]}</span>
-              ${p.badge ? `<span class="product-badge ${badgeClass}">${p.badge}</span>` : ''}
-              <button class="quick-add" onclick="event.stopPropagation(); quickAdd(${p.id})">Quick Add</button>
+              ${badgeHtml}
+              ${!isSoldOut ? `<button class="quick-add" onclick="event.stopPropagation(); quickAdd(${p.id})">Quick Add</button>` : ''}
             </div>
             <div class="product-info">
               <div class="product-name">${p.name}</div>
@@ -1522,6 +1537,31 @@
       document.getElementById('color-buttons').innerHTML = currentProduct.colors.map(c =>
         `<button class="option-btn" onclick="selectColor(this, '${c}')">${c}</button>`
       ).join('');
+
+      // 在庫表示
+      const stockEl = document.getElementById('modal-stock');
+      const addBtn = document.getElementById('modal-add-btn');
+      if (currentProduct.stock !== undefined && currentProduct.stock <= 0) {
+        stockEl.textContent = 'SOLD OUT';
+        stockEl.className = 'modal-stock';
+        addBtn.textContent = 'SOLD OUT';
+        addBtn.disabled = true;
+        addBtn.style.opacity = '0.4';
+        addBtn.style.cursor = 'not-allowed';
+      } else if (currentProduct.stock !== undefined) {
+        stockEl.textContent = `\u6b8b\u308a${currentProduct.stock}\u70b9`;
+        stockEl.className = 'modal-stock in-stock';
+        addBtn.textContent = 'Add to Cart';
+        addBtn.disabled = false;
+        addBtn.style.opacity = '';
+        addBtn.style.cursor = '';
+      } else {
+        stockEl.textContent = '';
+        addBtn.textContent = 'Add to Cart';
+        addBtn.disabled = false;
+        addBtn.style.opacity = '';
+        addBtn.style.cursor = '';
+      }
 
       document.getElementById('product-modal').classList.add('active');
       document.body.style.overflow = 'hidden';
