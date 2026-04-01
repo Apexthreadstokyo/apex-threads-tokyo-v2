@@ -4,14 +4,24 @@ Apex Threads Tokyo - Luxury EC Site
 """
 
 import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from flask import Flask, jsonify, request, send_from_directory
 import stripe
 
 app = Flask(__name__, static_folder="static")
 
 # Stripe設定
-stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", ""
-)
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+# メール通知設定
+SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASS = os.environ.get("SMTP_PASS", "")
+NOTIFY_EMAIL = os.environ.get("NOTIFY_EMAIL", "kento.osaki@icloud.com")
 
 # 商品データ
 PRODUCTS = [
@@ -267,6 +277,107 @@ def stripe_key():
         ""
     )
     return jsonify({"publicKey": pk})
+
+
+def send_order_notification(session):
+    """注文通知メールをオーナーに送信"""
+    if not SMTP_USER or not SMTP_PASS:
+        print("[WARNING] SMTP credentials not set, skipping email notification")
+        return
+
+    # 注文情報を取得
+    customer_email = session.get("customer_details", {}).get("email", "不明")
+    customer_name = session.get("customer_details", {}).get("name", "不明")
+    shipping = session.get("shipping_details", {}) or {}
+    address = shipping.get("address", {})
+    amount_total = session.get("amount_total", 0)
+
+    # 配送先を整形
+    shipping_addr = ""
+    if address:
+        shipping_addr = (
+            f"〒{address.get('postal_code', '')}\n"
+            f"  {address.get('state', '')}{address.get('city', '')}\n"
+            f"  {address.get('line1', '')} {address.get('line2', '') or ''}"
+        )
+
+    # line_itemsを取得
+    line_items_data = stripe.checkout.Session.list_line_items(session["id"])
+    items_text = ""
+    for item in line_items_data.get("data", []):
+        items_text += (
+            f"  - {item['description']}\n"
+            f"    数量: {item['quantity']}  "
+            f"金額: ¥{item['amount_total']:,}\n"
+        )
+
+    body = f"""【新規注文通知】APEX THREADS TOKYO
+
+注文日時: {session.get('created', '')}
+決済ID: {session.get('payment_intent', '')}
+
+━━━━━━━━━━━━━━━━━━━━
+■ お客様情報
+━━━━━━━━━━━━━━━━━━━━
+氏名: {customer_name}
+メール: {customer_email}
+
+━━━━━━━━━━━━━━━━━━━━
+■ 配送先
+━━━━━━━━━━━━━━━━━━━━
+{shipping_addr}
+
+━━━━━━━━━━━━━━━━━━━━
+■ 注文内容
+━━━━━━━━━━━━━━━━━━━━
+{items_text}
+合計: ¥{amount_total:,}
+
+━━━━━━━━━━━━━━━━━━━━
+Stripeダッシュボードで詳細を確認:
+https://dashboard.stripe.com/payments/{session.get('payment_intent', '')}
+"""
+
+    msg = MIMEMultipart()
+    msg["From"] = SMTP_USER
+    msg["To"] = NOTIFY_EMAIL
+    msg["Subject"] = f"【新規注文】¥{amount_total:,} - {customer_name}様"
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.send_message(msg)
+        print(f"[OK] Order notification sent to {NOTIFY_EMAIL}")
+    except Exception as e:
+        print(f"[ERROR] Failed to send email: {e}")
+
+
+@app.route("/api/webhook", methods=["POST"])
+def stripe_webhook():
+    """Stripe Webhookで注文完了を受け取る"""
+    payload = request.get_data()
+    sig_header = request.headers.get("Stripe-Signature", "")
+
+    if STRIPE_WEBHOOK_SECRET:
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, STRIPE_WEBHOOK_SECRET
+            )
+        except (ValueError, stripe.error.SignatureVerificationError):
+            return jsonify({"error": "Invalid signature"}), 400
+    else:
+        event = stripe.Event.construct_from(
+            request.get_json(), stripe.api_key
+        )
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        print(f"[ORDER] Payment received: {session.get('payment_intent')}")
+        send_order_notification(session)
+
+    return jsonify({"status": "ok"}), 200
 
 
 if __name__ == "__main__":
