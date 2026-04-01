@@ -354,6 +354,94 @@ https://dashboard.stripe.com/payments/{session.get('payment_intent', '')}
         print(f"[ERROR] Failed to send email: {e}")
 
 
+def send_customer_confirmation(session):
+    """注文確認メールをお客様に送信"""
+    if not SMTP_USER or not SMTP_PASS:
+        print("[WARNING] SMTP credentials not set, skipping customer email")
+        return
+
+    customer_email = session.get("customer_details", {}).get("email")
+    if not customer_email:
+        print("[WARNING] No customer email, skipping confirmation")
+        return
+
+    customer_name = session.get("customer_details", {}).get("name", "お客")
+    shipping = session.get("shipping_details", {}) or {}
+    address = shipping.get("address", {})
+    amount_total = session.get("amount_total", 0)
+
+    shipping_addr = ""
+    if address:
+        shipping_addr = (
+            f"〒{address.get('postal_code', '')}\n"
+            f"  {address.get('state', '')}{address.get('city', '')}\n"
+            f"  {address.get('line1', '')} {address.get('line2', '') or ''}"
+        )
+
+    line_items_data = stripe.checkout.Session.list_line_items(session["id"])
+    items_text = ""
+    for item in line_items_data.get("data", []):
+        items_text += (
+            f"  {item['description']}\n"
+            f"    数量: {item['quantity']}  "
+            f"金額: ¥{item['amount_total']:,}\n"
+        )
+
+    body = f"""{customer_name} 様
+
+この度はAPEX THREADS TOKYOをご利用いただき、
+誠にありがとうございます。
+
+ご注文を承りましたので、内容をお知らせいたします。
+
+━━━━━━━━━━━━━━━━━━━━
+■ ご注文内容
+━━━━━━━━━━━━━━━━━━━━
+{items_text}
+合計金額: ¥{amount_total:,}（税込）
+
+━━━━━━━━━━━━━━━━━━━━
+■ 配送先
+━━━━━━━━━━━━━━━━━━━━
+{customer_name} 様
+{shipping_addr}
+
+━━━━━━━━━━━━━━━━━━━━
+■ 配送について
+━━━━━━━━━━━━━━━━━━━━
+お届けまで3〜5営業日を予定しております。
+発送完了時に改めてご連絡いたします。
+
+━━━━━━━━━━━━━━━━━━━━
+■ お問い合わせ
+━━━━━━━━━━━━━━━━━━━━
+ご不明な点がございましたら、
+下記までお気軽にお問い合わせください。
+
+メール: apexthreadstokyo@outlook.jp
+電話: 070-8337-4625（平日10:00-18:00）
+
+━━━━━━━━━━━━━━━━━━━━
+APEX THREADS TOKYO
+https://apex-threads-tokyo-v2.onrender.com
+"""
+
+    msg = MIMEMultipart()
+    msg["From"] = SMTP_USER
+    msg["To"] = customer_email
+    msg["Subject"] = f"【APEX THREADS TOKYO】ご注文ありがとうございます（¥{amount_total:,}）"
+    msg.attach(MIMEText(body, "plain", "utf-8"))
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.send_message(msg)
+        print(f"[OK] Customer confirmation sent to {customer_email}")
+    except Exception as e:
+        print(f"[ERROR] Failed to send customer email: {e}")
+
+
 @app.route("/api/webhook", methods=["POST"])
 def stripe_webhook():
     """Stripe Webhookで注文完了を受け取る"""
@@ -376,6 +464,7 @@ def stripe_webhook():
         session = event["data"]["object"]
         print(f"[ORDER] Payment received: {session.get('payment_intent')}")
         send_order_notification(session)
+        send_customer_confirmation(session)
 
     return jsonify({"status": "ok"}), 200
 
