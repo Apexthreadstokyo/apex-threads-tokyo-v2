@@ -1262,7 +1262,6 @@
         <option value="default">SORT BY</option>
         <option value="price_low">Price: Low → High</option>
         <option value="price_high">Price: High → Low</option>
-        <option value="rating">Top Rated</option>
       </select>
     </div>
 
@@ -1463,8 +1462,6 @@
         const badgeHtml = isSoldOut
           ? '<span class="product-badge badge-soldout">SOLD OUT</span>'
           : (p.badge ? `<span class="product-badge ${p.badge === 'BEST SELLER' ? 'badge-best' : p.badge === 'NEW' ? 'badge-new' : p.badge === 'LIMITED' ? 'badge-limited' : ''}">${p.badge}</span>` : '');
-        const stars = '★'.repeat(Math.floor(p.rating)) + (p.rating % 1 >= 0.5 ? '½' : '');
-
         return `
           <div class="product-card fade-up visible ${isSoldOut ? 'sold-out' : ''}" onclick="openModal(${p.id})">
             <div class="product-image">
@@ -1475,10 +1472,6 @@
             </div>
             <div class="product-info">
               <div class="product-name">${p.name}</div>
-              <div class="product-rating">
-                <span class="stars">${stars}</span>
-                <span class="review-count">(${p.reviews})</span>
-              </div>
               <div class="product-price">
                 <span class="current-price">¥${p.price.toLocaleString()}</span>
                 ${p.original_price ? `<span class="original-price">¥${p.original_price.toLocaleString()}</span>` : ''}
@@ -1516,11 +1509,7 @@
       document.getElementById('modal-name').textContent = currentProduct.name;
       document.getElementById('modal-desc').textContent = currentProduct.description;
 
-      const stars = '★'.repeat(Math.floor(currentProduct.rating)) + (currentProduct.rating % 1 >= 0.5 ? '½' : '');
-      document.getElementById('modal-rating').innerHTML = `
-        <span class="stars">${stars}</span>
-        <span class="review-count">${currentProduct.rating} (${currentProduct.reviews} reviews)</span>
-      `;
+      document.getElementById('modal-rating').innerHTML = '';
 
       let priceHtml = `<span class="modal-current-price">¥${currentProduct.price.toLocaleString()}</span>`;
       if (currentProduct.original_price) {
