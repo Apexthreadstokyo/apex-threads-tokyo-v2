@@ -21,7 +21,7 @@ SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASS = os.environ.get("SMTP_PASS", "")
-NOTIFY_EMAIL = os.environ.get("NOTIFY_EMAIL", "kento.osaki@icloud.com")
+NOTIFY_EMAIL = os.environ.get("NOTIFY_EMAIL", "apexthreadstokyo@outlook.jp")
 
 # 商品データ
 PRODUCTS = [
