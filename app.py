@@ -212,10 +212,45 @@ def create_checkout():
     try:
         # リクエストのホストからベースURLを生成
         base_url = request.host_url.rstrip("/")
+        # 送料計算: 合計10,000円以上で送料無料、未満は800円
+        subtotal = sum(
+            item_data["price_data"]["unit_amount"] * item_data["quantity"]
+            for item_data in line_items
+        )
+        shipping_options = []
+        if subtotal >= 10000:
+            shipping_options.append({
+                "shipping_rate_data": {
+                    "type": "fixed_amount",
+                    "fixed_amount": {"amount": 0, "currency": "jpy"},
+                    "display_name": "送料無料",
+                    "delivery_estimate": {
+                        "minimum": {"unit": "business_day", "value": 3},
+                        "maximum": {"unit": "business_day", "value": 5},
+                    },
+                },
+            })
+        else:
+            shipping_options.append({
+                "shipping_rate_data": {
+                    "type": "fixed_amount",
+                    "fixed_amount": {"amount": 800, "currency": "jpy"},
+                    "display_name": "全国一律送料",
+                    "delivery_estimate": {
+                        "minimum": {"unit": "business_day", "value": 3},
+                        "maximum": {"unit": "business_day", "value": 5},
+                    },
+                },
+            })
+
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=line_items,
             mode="payment",
+            shipping_address_collection={
+                "allowed_countries": ["JP"],
+            },
+            shipping_options=shipping_options,
             success_url=base_url + "/?status=success",
             cancel_url=base_url + "/?status=cancel",
         )
