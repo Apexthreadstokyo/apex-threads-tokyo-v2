@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Apex Threads Tokyo - Luxury EC Site
+APX - Luxury EC Site
 """
 
 import os
@@ -110,7 +110,7 @@ PRODUCTS = [
     },
     {
         "id": 6,
-        "name": "APEX ESSENTIAL HOODIE",
+        "name": "APX ESSENTIAL HOODIE",
         "price": 9800,
         "original_price": None,
         "category": "hoodies",
@@ -155,12 +155,12 @@ PRODUCTS = [
     },
     {
         "id": 9,
-        "name": "APEX LOGO HOODIE",
+        "name": "APX LOGO HOODIE",
         "price": 10800,
         "original_price": 14800,
         "category": "hoodies",
         "badge": "NEW",
-        "description": "フロントにAPEXロゴを配したシグネチャーフーディ。裏起毛で暖かく、洗練されたストリートスタイル。",
+        "description": "フロントにAPXロゴを配したシグネチャーフーディ。裏起毛で暖かく、洗練されたストリートスタイル。",
         "sizes": ["S", "M", "L", "XL"],
         "colors": ["Black", "White"],
         "rating": 4.8,
@@ -328,7 +328,7 @@ def send_order_notification(session):
             f"金額: ¥{item['amount_total']:,}\n"
         )
 
-    body = f"""【新規注文通知】APEX THREADS TOKYO
+    body = f"""【新規注文通知】APX
 
 注文日時: {session.get('created', '')}
 決済ID: {session.get('payment_intent', '')}
@@ -406,7 +406,7 @@ def send_customer_confirmation(session):
 
     body = f"""{customer_name} 様
 
-この度はAPEX THREADS TOKYOをご利用いただき、
+この度はAPXをご利用いただき、
 誠にありがとうございます。
 
 ご注文を承りましたので、内容をお知らせいたします。
@@ -439,14 +439,14 @@ def send_customer_confirmation(session):
 電話: 070-8337-4625（平日10:00-18:00）
 
 ━━━━━━━━━━━━━━━━━━━━
-APEX THREADS TOKYO
+APX
 https://apex-threads-tokyo-v2.onrender.com
 """
 
     msg = MIMEMultipart()
     msg["From"] = SMTP_USER
     msg["To"] = customer_email
-    msg["Subject"] = f"【APEX THREADS TOKYO】ご注文ありがとうございます（¥{amount_total:,}）"
+    msg["Subject"] = f"【APX】ご注文ありがとうございます（¥{amount_total:,}）"
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
     try:
@@ -641,7 +641,7 @@ def send_shipping_notification(email, name):
     """出荷通知メールをお客様に送信"""
     body = f"""{name} 様
 
-いつもAPEX THREADS TOKYOをご利用いただきありがとうございます。
+いつもAPXをご利用いただきありがとうございます。
 
 ご注文の商品を発送いたしました。
 お届けまで1〜3日程度お待ちください。
@@ -651,12 +651,12 @@ def send_shipping_notification(email, name):
 メール: apexthreadstokyo@outlook.jp
 電話: 070-8337-4625
 
-APEX THREADS TOKYO
+APX
 """
     msg = MIMEMultipart()
     msg["From"] = SMTP_USER
     msg["To"] = email
-    msg["Subject"] = f"【APEX THREADS TOKYO】商品を発送しました"
+    msg["Subject"] = f"【APX】商品を発送しました"
     msg.attach(MIMEText(body, "plain", "utf-8"))
 
     try:
@@ -670,6 +670,6 @@ APEX THREADS TOKYO
 
 
 if __name__ == "__main__":
-    print("\n  ⬛ APEX_THREADS_TOKYO")
+    print("\n  ⬛ APX")
     print("  http://localhost:5050\n")
     app.run(debug=True, port=5050)
